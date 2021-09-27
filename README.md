@@ -8,7 +8,7 @@
               __/ |                   
              |___/                                                                  
 ```
-##Regular - PHP Regex Builder & preg_* Interface
+## Regular - PHP Regex Builder & preg_* Interface
 
 [![Travis](https://img.shields.io/travis/lukasjakobi/regular.svg?style=flat-square)](https://travis-ci.org/lukasjakobi/regular)
 [![release](https://img.shields.io/github/release/lukasjakobi/regular.svg?style=flat-square)](https://github.com/lukasjakobi/regular/releases)
