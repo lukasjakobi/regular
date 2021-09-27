@@ -26,12 +26,12 @@
   },
   "autoload": {
     "psr-4": {
-      "Regular\\": "src"
+      "LukasJakobi\\Regular\\": "src"
     }
   },
   "autoload-dev": {
     "psr-4": {
-      "Regular\\Test\\": "tests"
+      "LukasJakobi\\Regular\\Test\\": "tests"
     }
   },
   "scripts": {

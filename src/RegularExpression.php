@@ -2,30 +2,23 @@
 
 declare(strict_types=1);
 
-namespace Regex;
+namespace LukasJakobi\Regular;
 
 class RegularExpression
 {
-    /** @var string|null */
-    protected ?string $pattern;
-
-    /** @var string */
-    protected string $modifier;
-
-    /** @var string|null */
-    protected ?string $delimiter;
+    protected string $pattern, $modifier, $delimiter;
 
     /**
      * RegularExpression constructor.
      *
-     * @param string|null $pattern the regular expression, leave empty if you want to use the pattern builder
+     * @param string $pattern the regular expression, leave empty if you want to use the pattern builder
      * @param string $delimiter the regular delimiter
      * @param string $modifier the regular modifier mode
      */
     public function __construct(
-        string $pattern = null,
+        string $pattern = '',
         string $delimiter = RegularDelimiter::SLASH,
-        string $modifier = RegularModifier::CASE_INSENSITIVE
+        string $modifier = RegularModifier::NONE
     ) {
         $this->pattern = $pattern;
         $this->modifier = $modifier;
@@ -120,10 +113,10 @@ class RegularExpression
     public function char(string $char): self
     {
         if (strlen($char) > 1) {
-            return $this->charset($char);
+            $this->pattern .= sprintf('[%s]', $char);
+        } else {
+            $this->pattern .= $char;
         }
-
-        $this->pattern .= sprintf('[%s]', $char);
 
         return $this;
     }
@@ -136,10 +129,6 @@ class RegularExpression
      */
     public function notChar(string $char): self
     {
-        if (strlen($char) > 1) {
-            return $this->charset($char);
-        }
-
         $this->pattern .= sprintf('[^%s]', $char);
 
         return $this;
@@ -157,24 +146,7 @@ class RegularExpression
             return $this->char($charset);
         }
 
-        $this->pattern .= sprintf('[%s]', $charset);
-
-        return $this;
-    }
-
-    /**
-     * Add negated charset to the pattern
-     *
-     * @param string $charset
-     * @return self
-     */
-    public function notCharset(string $charset): self
-    {
-        if (strlen($charset) === 1) {
-            return $this->char($charset);
-        }
-
-        $this->pattern .= sprintf('[^%s]', $charset);
+        $this->pattern .= $charset;
 
         return $this;
     }
@@ -224,6 +196,42 @@ class RegularExpression
     }
 
     /**
+     * Add whitespace to the pattern
+     *
+     * @return $this
+     */
+    public function whitespace(): self
+    {
+        $this->pattern .= '\s';
+
+        return $this;
+    }
+
+    /**
+     * Only match subjects that start with this pattern
+     *
+     * @return $this
+     */
+    public function startOfString(): self
+    {
+        $this->pattern .= '^';
+
+        return $this;
+    }
+
+    /**
+     * Only match subjects that end with this pattern
+     *
+     * @return $this
+     */
+    public function endOfString(): self
+    {
+        $this->pattern .= '$';
+
+        return $this;
+    }
+
+    /**
      * Get the pattern of the regular expression (not formatted)
      *
      * @return string
@@ -240,6 +248,17 @@ class RegularExpression
      */
     public function toExpression(): string
     {
-        return "$this->delimiter$this->pattern$this->delimiter$this->modifier";
+        return $this->delimiter . $this->pattern . $this->delimiter . $this->modifier;
+    }
+
+    /**
+     * Matches subject against pattern
+     *
+     * @param string $subject
+     * @return bool
+     */
+    public function matches(string $subject): bool
+    {
+        return preg_match($this->toExpression(), $subject) === 1;
     }
 }

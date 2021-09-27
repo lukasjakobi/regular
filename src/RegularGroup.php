@@ -2,8 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Regex;
+namespace LukasJakobi\Regular;
 
 class RegularGroup extends RegularExpression
-{
-}
+{ }
