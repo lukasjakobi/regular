@@ -19,7 +19,8 @@
     }
   ],
   "require": {
-    "php" : ">=7.4"
+    "php" : "^8.0",
+    "mbstring" : "latest"
   },
   "require-dev": {
     "phpunit/phpunit": "^9.3"

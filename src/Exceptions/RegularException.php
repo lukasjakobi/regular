@@ -7,4 +7,6 @@ namespace LukasJakobi\Regular\Exceptions;
 use Exception;
 
 class RegularException extends Exception
-{ }
+{
+
+}

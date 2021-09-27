@@ -16,7 +16,7 @@
 ## Installation
 
 ```bash
-composer install lukasjakobi/regular
+composer require lukasjakobi/regular
 ```
 
 Or download [the latest release](https://github.com/lukasjakobi/regular/releases/latest).
@@ -41,7 +41,7 @@ $regular = (new RegularExpression())
     ->digit()
     ->repeat(4, 14);
 
-echo $regular->matches('+49 1234 56789');
+echo $regular->matches('+49 123456789')->valid();
 ```
 
 ## Band Name
@@ -75,7 +75,7 @@ $regular = (new RegularExpression())
     ->repeat(5);
 
 echo $regular->toExpression();
-echo $regular->matches('06258');
+echo $regular->matches('06258')->valid();
 ```
 
 #### Output

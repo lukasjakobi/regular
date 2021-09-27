@@ -65,15 +65,15 @@ class RegularExpression
     }
 
     /**
-     * Add a digit between $min and $max to the pattern
+     * Add a digit between m and n to the pattern
      *
-     * @param int $min
-     * @param int $max
+     * @param int $m
+     * @param int $n
      * @return self
      */
-    public function between(int $min, int $max): self
+    public function between(int $m, int $n): self
     {
-        $this->pattern .= sprintf('[%s-%s]', $min, $max);
+        $this->pattern .= sprintf('[%s-%s]', $m, $n);
 
         return $this;
     }
@@ -92,7 +92,7 @@ class RegularExpression
     }
 
     /**
-     * Add negated digit to the pattern
+     * Exclude digit from the pattern
      *
      * @param int|null $number
      * @return self
@@ -122,7 +122,7 @@ class RegularExpression
     }
 
     /**
-     * Add negated char to the pattern
+     * Exclude char from the pattern
      *
      * @param string $char
      * @return self
@@ -165,7 +165,7 @@ class RegularExpression
     }
 
     /**
-     * Add a custom regular expression part to the pattern
+     * Add a group expression to the pattern
      *
      * @param RegularGroup $group the group to add to the
      * @return $this
@@ -232,16 +232,6 @@ class RegularExpression
     }
 
     /**
-     * Get the pattern of the regular expression (not formatted)
-     *
-     * @return string
-     */
-    public function getPattern(): string
-    {
-        return $this->pattern;
-    }
-
-    /**
      * Returns the complete regular expression including
      *
      * @return string
@@ -255,10 +245,43 @@ class RegularExpression
      * Matches subject against pattern
      *
      * @param string $subject
-     * @return bool
+     * @return RegularResult
      */
-    public function matches(string $subject): bool
+    public function matches(string $subject): RegularResult
     {
-        return preg_match($this->toExpression(), $subject) === 1;
+        $matches = [];
+        $isMatching = preg_match($this->toExpression(), $subject, $matches) === 1;
+
+        return new RegularResult($matches, $isMatching);
+    }
+
+    /**
+     * Get the modifier of the regular expression
+     *
+     * @return string
+     */
+    public function getModifier(): string
+    {
+        return $this->modifier;
+    }
+
+    /**
+     * Get the delimeter of the regular expression
+     *
+     * @return string
+     */
+    public function getDelimiter(): string
+    {
+        return $this->delimiter;
+    }
+
+    /**
+     * Get the pattern of the regular expression
+     *
+     * @return string
+     */
+    public function getPattern(): string
+    {
+        return $this->pattern;
     }
 }

@@ -12,14 +12,33 @@ use PHPUnit\Framework\TestCase;
 
 class RegularExpressionTest extends TestCase
 {
-    public function testRegexBuilder(): void
+    /**
+     * @param RegularExpression $regularExpression
+     * @param string $expected
+     * @dataProvider dataRegexBuilder
+     */
+    public function testRegexBuilder(RegularExpression $regularExpression, string $expected): void
     {
-        $this->assertEquals('/[0-9]{5}\s/', (new RegularExpression())->digit()->repeat(5)->whitespace()
-            ->toExpression());
-        $this->assertEquals('/[a-zA-Z0-9]\w/i', (new RegularExpression())->pattern('[a-zA-Z0-9]\w')
-            ->modifier(RegularModifier::CASE_INSENSITIVE)->toExpression());
-        $this->assertEquals('@[a-zA-Z0-9]\w@m', (new RegularExpression())->pattern('[a-zA-Z0-9]\w')
-            ->modifier(RegularModifier::MULTI_LINE)->delimiter(RegularDelimiter::AT)->toExpression());
+        $this->assertEquals($expected, $regularExpression->toExpression());
+    }
+
+    public function dataRegexBuilder(): array
+    {
+        return [
+            '#1' => [
+                (new RegularExpression())->digit()->repeat(5)->whitespace(),
+                '/[0-9]{5}\s/'
+            ],
+            '#2' => [
+                (new RegularExpression())->char('abc')->notChar('d')->repeat(2)->endOfString(),
+                '/[abc][^d]{2}$/'
+            ],
+            '#3' => [
+                (new RegularExpression('^[^1-8]'))->char('abc')->notChar('b')->add('.*')
+                    ->modifier(RegularModifier::CASE_INSENSITIVE)->delimiter(RegularDelimiter::HASH),
+                '#^[^1-8][abc][^b].*#i'
+            ],
+        ];
     }
 
     public function testRegex(): void
@@ -61,8 +80,12 @@ class RegularExpressionTest extends TestCase
             ->digit()
             ->repeat(4, 10);
 
+        $regularResult = $regular->matches('+49 123456789');
+
         $this->assertEquals('/\+[0-9]{1,3}\s[0-9]{4,10}/', $regular->toExpression());
-        $this->assertTrue($regular->matches('+49 1234 56789'));
+        $this->assertTrue($regularResult->valid());
+        $this->assertEquals(1, $regularResult->count());
+        $this->assertEquals(['+49 123456789'], $regularResult->matches());
     }
 
     public function testMatchStart(): void
@@ -72,16 +95,16 @@ class RegularExpressionTest extends TestCase
             ->charset('hello');
 
         $this->assertEquals('/^hello/', $regular->toExpression());
-        $this->assertTrue($regular->matches('hello world'));
+        $this->assertTrue($regular->matches('hello world')->valid());
     }
 
     public function testMatchEnd(): void
     {
         $regular = (new RegularExpression())
-            ->charset('hello')
+            ->charset('world')
             ->endOfString();
 
-        $this->assertEquals('/hello$/', $regular->toExpression());
-        $this->assertTrue($regular->matches('world hello'));
+        $this->assertEquals('/world$/', $regular->toExpression());
+        $this->assertTrue($regular->matches('hello world')->valid());
     }
 }
