@@ -42,31 +42,11 @@ class RegularReplaceResponse
     }
 
     /**
-     * @param string $pattern
-     * @return self
-     */
-    public function setPattern(string $pattern): self
-    {
-        $this->pattern = $pattern;
-        return $this;
-    }
-
-    /**
      * @return array|string
      */
     public function getReplacement(): array|string
     {
         return $this->replacement;
-    }
-
-    /**
-     * @param array|string $replacement
-     * @return self
-     */
-    public function setReplacement(array|string $replacement): self
-    {
-        $this->replacement = $replacement;
-        return $this;
     }
 
     /**
@@ -78,31 +58,11 @@ class RegularReplaceResponse
     }
 
     /**
-     * @param array|string $subject
-     * @return self
-     */
-    public function setSubject(array|string $subject): self
-    {
-        $this->subject = $subject;
-        return $this;
-    }
-
-    /**
      * @return int
      */
     public function getLimit(): int
     {
         return $this->limit;
-    }
-
-    /**
-     * @param int $limit
-     * @return self
-     */
-    public function setLimit(int $limit): self
-    {
-        $this->limit = $limit;
-        return $this;
     }
 
     /**
@@ -114,31 +74,11 @@ class RegularReplaceResponse
     }
 
     /**
-     * @param int $count
-     * @return self
-     */
-    public function setCount(int $count): self
-    {
-        $this->count = $count;
-        return $this;
-    }
-
-    /**
      * @return array|string|null
      */
     public function getResponse(): array|string|null
     {
         return $this->response;
-    }
-
-    /**
-     * @param array|string|null $response
-     * @return self
-     */
-    public function setResponse(array|string|null $response): self
-    {
-        $this->response = $response;
-        return $this;
     }
 
     /**

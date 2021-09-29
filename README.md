@@ -10,8 +10,12 @@ ______                 _              _____                             _
 ```
 ## Regular - PHP Regex Builder & preg_* Interface
 
-[![Travis](https://img.shields.io/travis/lukasjakobi/regular.svg?style=flat-square)](https://travis-ci.org/lukasjakobi/regular)
-[![release](https://img.shields.io/github/release/lukasjakobi/regular.svg?style=flat-square)](https://github.com/lukasjakobi/regular/releases)
+[![version](https://shields.io/github/v/release/lukasjakobi/regular?include_prereleases)](https://github.com/lukasjakobi/regular/releases)
+[![downloads](https://shields.io/github/downloads/lukasjakobi/regular/total)]()
+[![lc](https://shields.io/github/last-commit/lukasjakobi/regular)]()
+[![php](https://shields.io/github/languages/top/lukasjakobi/regular)]()
+[![php-v](https://shields.io/packagist/php-v/lukasjakobi/regular)]()
+[![licence](https://shields.io/github/license/lukasjakobi/regular)]()
 
 ## Installation
 

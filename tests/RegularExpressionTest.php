@@ -60,18 +60,33 @@ class RegularExpressionTest extends TestCase
      * @param string $subject
      * @param int $count
      * @param array $matches
+     * @param int $flags
+     * @param int $offset
      * @param bool $successful
      *
      * @dataProvider dataMatches
      */
-    public function testMatches(RegularExpression $regularExpression, string $subject, int $count, array $matches, bool $successful): void
-    {
-        $result = $regularExpression->matches($subject);
+    public function testMatches(
+        RegularExpression $regularExpression,
+        string $subject,
+        int $count,
+        array $matches,
+        int $flags,
+        int $offset,
+        bool $successful
+    ): void {
+        $result = $regularExpression->matches($subject, $flags, $offset);
 
         $this->assertTrue($result->isValid());
         $this->assertEquals($successful, $result->isSuccessful());
+        $this->assertEquals($regularExpression->toExpression(), $result->getPattern());
+        $this->assertEquals($flags, $result->getFlags());
+        $this->assertEquals($offset, $result->getOffset());
         $this->assertEquals($count, $result->getCount());
+        $this->assertEquals(($count > 0), $result->hasMatches());
+        $this->assertEquals($subject, $result->getSubject());
         $this->assertEquals($matches, $result->getMatches());
+        $this->assertIsInt($result->getResponse());
     }
 
     /**
@@ -85,6 +100,8 @@ class RegularExpressionTest extends TestCase
                 'my favourite number is 7',
                 1,
                 ['7'],
+                0,
+                0,
                 true
             ],
             '#2' => [
@@ -92,6 +109,8 @@ class RegularExpressionTest extends TestCase
                 'my favourite numbers are 7 and 9',
                 1,
                 ['7'],
+                0,
+                0,
                 true
             ],
             '#3' => [
@@ -99,6 +118,8 @@ class RegularExpressionTest extends TestCase
                 'no matches',
                 0,
                 [],
+                0,
+                0,
                 false
             ]
         ];
@@ -109,18 +130,33 @@ class RegularExpressionTest extends TestCase
      * @param string $subject
      * @param int $count
      * @param array $matches
+     * @param int $flags
+     * @param int $offset
      * @param bool $successful
      *
      * @dataProvider dataMatchesAll
      */
-    public function testMatchesAll(RegularExpression $regularExpression, string $subject, int $count, array $matches, bool $successful): void
-    {
+    public function testMatchesAll(
+        RegularExpression $regularExpression,
+        string $subject,
+        int $count,
+        array $matches,
+        int $flags,
+        int $offset,
+        bool $successful
+    ): void {
         $result = $regularExpression->matchesAll($subject);
 
         $this->assertTrue($result->isValid());
         $this->assertEquals($successful, $result->isSuccessful());
+        $this->assertEquals($regularExpression->toExpression(), $result->getPattern());
+        $this->assertEquals($flags, $result->getFlags());
+        $this->assertEquals($offset, $result->getOffset());
         $this->assertEquals($count, $result->getCount());
+        $this->assertEquals(($count > 0), $result->hasMatches());
+        $this->assertEquals($subject, $result->getSubject());
         $this->assertEquals($matches, $result->getMatches());
+        $this->assertIsInt($result->getResponse());
     }
 
     /**
@@ -134,6 +170,8 @@ class RegularExpressionTest extends TestCase
                 'my favourite number is 7',
                 1,
                 ['7'],
+                0,
+                0,
                 true
             ],
             '#2' => [
@@ -141,6 +179,8 @@ class RegularExpressionTest extends TestCase
                 'my favourite numbers are 7 and 9',
                 2,
                 ['7', '9'],
+                0,
+                0,
                 true
             ],
             '#3' => [
@@ -148,6 +188,8 @@ class RegularExpressionTest extends TestCase
                 'no matches',
                 0,
                 [],
+                0,
+                0,
                 false
             ]
         ];
@@ -157,8 +199,9 @@ class RegularExpressionTest extends TestCase
      * @param RegularExpression $regularExpression
      * @param string|array $replacement
      * @param string|array $subject
-     * @param int $count
      * @param string|array $results
+     * @param int $limit
+     * @param int $count
      * @param bool $successful
      *
      * @dataProvider dataReplace
@@ -168,15 +211,20 @@ class RegularExpressionTest extends TestCase
         string|array $replacement,
         string|array $subject,
         string|array $results,
+        int $limit,
         int $count,
         bool $successful
     ): void {
-        $result = $regularExpression->replace($replacement, $subject);
+        $result = $regularExpression->replace($replacement, $subject, $limit);
 
         $this->assertTrue($result->isValid());
         $this->assertEquals($successful, $result->isSuccessful());
         $this->assertEquals($count, $result->getCount());
         $this->assertEquals($results, $result->getResponse());
+        $this->assertEquals($subject, $result->getSubject());
+        $this->assertEquals($regularExpression->toExpression(), $result->getPattern());
+        $this->assertEquals($limit, $result->getLimit());
+        $this->assertEquals($replacement, $result->getReplacement());
     }
 
     /**
@@ -190,6 +238,7 @@ class RegularExpressionTest extends TestCase
                 '7',
                 'my favourite number is x',
                 'my favourite number is 7',
+                -1,
                 1,
                 true
             ],
@@ -197,8 +246,9 @@ class RegularExpressionTest extends TestCase
                 (new RegularExpression())->char('\.'),
                 ' ',
                 'this.text.is.dotted',
-                'this text is dotted',
-                3,
+                'this text is.dotted',
+                2,
+                2,
                 true
             ],
             '#3' => [
@@ -206,6 +256,7 @@ class RegularExpressionTest extends TestCase
                 'replacement',
                 'no matches',
                 'no matches',
+                -1,
                 0,
                 false
             ],
@@ -217,6 +268,7 @@ class RegularExpressionTest extends TestCase
      * @param array $array
      * @param array $response
      * @param int $count
+     * @param int $flags
      * @param bool $successful
      *
      * @dataProvider dataGrep
@@ -226,13 +278,17 @@ class RegularExpressionTest extends TestCase
         array $array,
         array $response,
         int $count,
+        int $flags,
         bool $successful
     ): void {
-        $result = $regularExpression->grep($array);
+        $result = $regularExpression->grep($array, $flags);
 
         $this->assertTrue($result->isValid());
         $this->assertEquals($successful, $result->isSuccessful());
+        $this->assertEquals($regularExpression->toExpression(), $result->getPattern());
         $this->assertEquals($count, $result->getCount());
+        $this->assertEquals($array, $result->getArray());
+        $this->assertEquals($flags, $result->getFlags());
         $this->assertEquals($response, $result->getResponse());
     }
 
@@ -247,21 +303,24 @@ class RegularExpressionTest extends TestCase
                 ['a', 'b', 'c', '1'],
                 ['a', 'b', 'c'],
                 3,
+                0,
                 true
             ],
             '#2' => [
                 (new RegularExpression())->char('x'),
                 ['x', 'xxx', 'no'],
-                ['x', 'xxx'],
-                2,
+                ['no'],
+                1,
+                1,
                 true
             ],
             '#3' => [
                 (new RegularExpression())->char('x'),
                 ['a', 'b', 'c'],
-                [],
-                0,
-                false
+                ['a', 'b', 'c'],
+                3,
+                1,
+                true
             ],
         ];
     }
@@ -270,6 +329,8 @@ class RegularExpressionTest extends TestCase
      * @param RegularExpression $regularExpression
      * @param string $subject
      * @param array $results
+     * @param int $limit
+     * @param int $flags
      * @param int $count
      * @param bool $successful
      *
@@ -279,15 +340,21 @@ class RegularExpressionTest extends TestCase
         RegularExpression $regularExpression,
         string $subject,
         array $results,
+        int $limit,
+        int $flags,
         int $count,
         bool $successful
     ): void {
-        $result = $regularExpression->split($subject);
+        $result = $regularExpression->split($subject, $limit, $flags);
 
         $this->assertTrue($result->isValid());
         $this->assertEquals($successful, $result->isSuccessful());
         $this->assertEquals($count, $result->getCount());
         $this->assertEquals($results, $result->getResponse());
+        $this->assertEquals($limit, $result->getLimit());
+        $this->assertEquals($flags, $result->getFlags());
+        $this->assertEquals($regularExpression->toExpression(), $result->getPattern());
+        $this->assertEquals($subject, $result->getSubject());
     }
 
     /**
@@ -300,20 +367,26 @@ class RegularExpressionTest extends TestCase
                 (new RegularExpression())->char('x'),
                 'axbxc',
                 ['a', 'b', 'c'],
+                -1,
+                0,
                 3,
                 true
             ],
             '#2' => [
                 (new RegularExpression())->char('d'),
                 'derdiedas',
-                ['', 'er', 'ie', 'as'],
-                4,
+                ['', 'er', 'iedas'],
+                3,
+                0,
+                3,
                 true
             ],
             '#3' => [
                 (new RegularExpression())->char('x'),
                 'no match',
                 ['no match'],
+                2,
+                0,
                 1,
                 true
             ],

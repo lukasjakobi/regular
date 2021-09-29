@@ -56,7 +56,7 @@ class RegularGrepResponse
      */
     public function getResponse(): array|bool
     {
-        return $this->response;
+        return array_values($this->response);
     }
 
     /**
@@ -80,6 +80,6 @@ class RegularGrepResponse
      */
     public function isSuccessful(): bool
     {
-        return (bool) count($this->response);
+        return !($this->response === false) && count($this->response);
     }
 }
