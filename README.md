@@ -10,12 +10,11 @@ ______                 _              _____                             _
 ```
 ## Regular - PHP Regex Builder & preg_* Interface
 
-[![version](https://shields.io/github/v/release/lukasjakobi/regular?include_prereleases)](https://github.com/lukasjakobi/regular/releases)
-[![downloads](https://shields.io/github/downloads/lukasjakobi/regular/total)]()
-[![lc](https://shields.io/github/last-commit/lukasjakobi/regular)]()
-[![php](https://shields.io/github/languages/top/lukasjakobi/regular)]()
-[![php-v](https://shields.io/packagist/php-v/lukasjakobi/regular)]()
-[![licence](https://shields.io/github/license/lukasjakobi/regular)]()
+[![version](https://shields.io/github/v/release/lukasjakobi/regular?include_prereleases&color=217FA4)](https://github.com/lukasjakobi/regular/releases)
+[![php](https://shields.io/github/languages/top/lukasjakobi/regular?color=2A8EA6)]()
+[![php-v](https://shields.io/packagist/php-v/lukasjakobi/regular?color=339DA9)]()
+[![codecoverage](https://img.shields.io/static/v1?label=code%20coverage&message=100%&color=3BACAB)]()
+[![licence](https://shields.io/github/license/lukasjakobi/regular?color=44BBAD)]()
 
 ## Installation
 
@@ -37,6 +36,7 @@ https://github.com/lukasjakobi/regular/wiki/Installation
 # Examples
 
 ## Match (preg_match)
+[![licence](https://img.shields.io/static/v1?label=&message=complete&color=4DCAAF)]()
 
 Check whether your pattern matches the subject
 
@@ -107,6 +107,8 @@ true
 ```
 
 ## Replace (preg_replace)
+[![licence](https://img.shields.io/static/v1?label=&message=complete&color=4DCAAF)]()
+
 Replace texts
 
 ```php
@@ -125,6 +127,8 @@ this text will be converted
 ```
 
 ## Split (preg_split)
+[![licence](https://img.shields.io/static/v1?label=&message=complete&color=4DCAAF)]()
+
 
 Split input string at pattern
 
@@ -144,6 +148,7 @@ echo $regular->split($subject)->getResponse();
 ```
 
 ## Grep (preg_grep)
+[![licence](https://img.shields.io/static/v1?label=&message=complete&color=4DCAAF)]()
 
 Greps strings out of an array, that match your pattern
 
