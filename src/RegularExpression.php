@@ -232,7 +232,7 @@ class RegularExpression
     }
 
     /**
-     * Returns the complete regular expression including
+     * Returns the complete regular expression including delimiter
      *
      * @return string
      */
@@ -244,15 +244,90 @@ class RegularExpression
     /**
      * Matches subject against pattern
      *
-     * @param string $subject
+     * @param string $subject the text to search in
+     * @param int $flags custom flags
+     * @param int $offset custom offset
      * @return RegularResult
      */
-    public function matches(string $subject): RegularResult
+    public function matches(string $subject, int $flags = 0, int $offset = 0): RegularResult
     {
         $matches = [];
-        $isMatching = preg_match($this->toExpression(), $subject, $matches) === 1;
+        $valid = preg_match($this->toExpression(), $subject, $matches, $flags, $offset) === 1;
 
-        return new RegularResult($matches, $isMatching);
+        return new RegularResult($matches, $valid, count($matches));
+    }
+
+    /**
+     * Matches subject against pattern
+     *
+     * @param string $subject the text to search in
+     * @param int $flags custom flags
+     * @param int $offset custom offset
+     * @return RegularResult
+     */
+    public function matchesAll(string $subject, int $flags = 0, int $offset = 0): RegularResult
+    {
+        $matches = [];
+        $result = preg_match_all($this->toExpression(), $subject, $matches, $flags, $offset);
+
+        return new RegularResult($matches, $result !== false, $result);
+    }
+
+    /**
+     * Replaces matches of pattern against subject with replacement
+     *
+     * @param string|array $replacement the string to replace with
+     * @param string|array $subject the text to search in
+     * @param int $limit limit of results (leave empty to get all results)
+     * @param int|null $count amount of replacements
+     * @return RegularResult
+     */
+    public function replace(string|array $replacement, string|array $subject, int $limit = -1,  int &$count = null): RegularResult
+    {
+        $result = preg_replace($this->toExpression(), $replacement, $subject, $limit, $count);
+
+        return new RegularResult($result, $result !== null, is_countable($result) ? count($result) : 1);
+    }
+
+    /**
+     * Grep matches of pattern in subject
+     *
+     * @param array $array the array to grep out of
+     * @param int $flags custom flags
+     * @return RegularResult
+     */
+    public function grep(array $array, int $flags = 0): RegularResult
+    {
+        $result = preg_grep($this->toExpression(), $array, $flags);
+
+        return new RegularResult($result, $result !== false, count($result));
+    }
+
+    /**
+     * Split a charset using pattern
+     *
+     * @param string $subject
+     * @param int $limit
+     * @param int $flags custom flags
+     * @return RegularResult
+     */
+    public function split(string $subject, int $limit = -1, int $flags = 0): RegularResult
+    {
+        $result = preg_split($this->toExpression(), $subject, $limit, $flags);
+
+        return new RegularResult($result, $result !== false, count($result));
+    }
+
+    /**
+     * Quote a string to escape regular expression syntax
+     *
+     * @param string $string
+     * @param string|null $delimiter
+     * @return string
+     */
+    public function quote(string $string, ?string $delimiter = null): string
+    {
+        return preg_quote($string, $delimiter);
     }
 
     /**

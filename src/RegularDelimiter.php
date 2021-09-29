@@ -7,10 +7,8 @@ namespace LukasJakobi\Regular;
 interface RegularDelimiter
 {
     public const SLASH = '/';
-    public const TILDE = '~';
-    public const AT = '@';
-    public const SEMICOLON = ';';
-    public const PERCENTAGE = '%';
     public const HASH = '#';
-    public const ACUTE_ACCENT = '´';
+    public const PLUS = '+';
+    public const AT = '@';
+    public const PERCENTAGE = '%';
 }

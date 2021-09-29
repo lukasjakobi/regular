@@ -8,17 +8,20 @@ class RegularResult
 {
     protected array|string $matches;
     protected bool $valid;
+    protected int $count;
 
     /**
      * RegularResult constructor.
      *
      * @param array|string $result
      * @param bool $valid
+     * @param int $count
      */
-    public function __construct(array|string $result, bool $valid)
+    public function __construct(array|string $result, bool $valid, int $count)
     {
         $this->matches = $result;
         $this->valid = $valid;
+        $this->count = $count;
     }
 
     /**
@@ -38,7 +41,7 @@ class RegularResult
      */
     public function count(): int
     {
-        return count($this->matches);
+        return $this->count;
     }
 
     /**
