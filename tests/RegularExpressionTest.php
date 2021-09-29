@@ -29,16 +29,27 @@ class RegularExpressionTest extends TestCase
     {
         return [
             '#1' => [
-                (new RegularExpression())->digit()->repeat(5)->whitespace(),
+                (new RegularExpression())
+                    ->digit()
+                    ->repeat(5)
+                    ->whitespace(),
                 '/[0-9]{5}\s/'
             ],
             '#2' => [
-                (new RegularExpression())->char('abc')->notChar('d')->repeat(2)->endOfString(),
+                (new RegularExpression())
+                    ->char('abc')
+                    ->notChar('d')
+                    ->repeat(2)
+                    ->endOfString(),
                 '/[abc][^d]{2}$/'
             ],
             '#3' => [
-                (new RegularExpression('^[^1-8]'))->char('abc')->notChar('b')->add('.*')
-                    ->modifier(RegularModifier::CASE_INSENSITIVE)->delimiter(RegularDelimiter::HASH),
+                (new RegularExpression('^[^1-8]'))
+                    ->char('abc')
+                    ->notChar('b')
+                    ->add('.*')
+                    ->setModifier(RegularModifier::CASE_INSENSITIVE)
+                    ->setDelimiter(RegularDelimiter::HASH),
                 '#^[^1-8][abc][^b].*#i'
             ],
         ];
@@ -49,16 +60,18 @@ class RegularExpressionTest extends TestCase
      * @param string $subject
      * @param int $count
      * @param array $matches
+     * @param bool $successful
      *
      * @dataProvider dataMatches
      */
-    public function testMatches(RegularExpression $regularExpression, string $subject, int $count, array $matches): void
+    public function testMatches(RegularExpression $regularExpression, string $subject, int $count, array $matches, bool $successful): void
     {
-        $regularResult = $regularExpression->matches($subject);
+        $result = $regularExpression->matches($subject);
 
-        $this->assertTrue($regularResult->valid());
-        $this->assertEquals($count, $regularResult->count());
-        $this->assertEquals($matches, $regularResult->matches());
+        $this->assertTrue($result->isValid());
+        $this->assertEquals($successful, $result->isSuccessful());
+        $this->assertEquals($count, $result->getCount());
+        $this->assertEquals($matches, $result->getMatches());
     }
 
     /**
@@ -71,13 +84,22 @@ class RegularExpressionTest extends TestCase
                 (new RegularExpression())->between(6, 9),
                 'my favourite number is 7',
                 1,
-                ['7']
+                ['7'],
+                true
             ],
             '#2' => [
                 (new RegularExpression())->between(6, 9),
                 'my favourite numbers are 7 and 9',
                 1,
-                ['7']
+                ['7'],
+                true
+            ],
+            '#3' => [
+                (new RegularExpression())->between(6, 9),
+                'no matches',
+                0,
+                [],
+                false
             ]
         ];
     }
@@ -87,16 +109,18 @@ class RegularExpressionTest extends TestCase
      * @param string $subject
      * @param int $count
      * @param array $matches
+     * @param bool $successful
      *
      * @dataProvider dataMatchesAll
      */
-    public function testMatchesAll(RegularExpression $regularExpression, string $subject, int $count, array $matches): void
+    public function testMatchesAll(RegularExpression $regularExpression, string $subject, int $count, array $matches, bool $successful): void
     {
-        $regularResult = $regularExpression->matchesAll($subject);
+        $result = $regularExpression->matchesAll($subject);
 
-        $this->assertTrue($regularResult->valid());
-        $this->assertEquals($count, $regularResult->count());
-        $this->assertEquals($matches, $regularResult->matches());
+        $this->assertTrue($result->isValid());
+        $this->assertEquals($successful, $result->isSuccessful());
+        $this->assertEquals($count, $result->getCount());
+        $this->assertEquals($matches, $result->getMatches());
     }
 
     /**
@@ -106,66 +130,231 @@ class RegularExpressionTest extends TestCase
     {
         return [
             '#1' => [
-                (new RegularExpression())->between(6, 9)->delimiter(RegularDelimiter::HASH),
+                (new RegularExpression())->between(6, 9)->setDelimiter(RegularDelimiter::HASH),
                 'my favourite number is 7',
                 1,
-                [['7']]
+                ['7'],
+                true
             ],
             '#2' => [
                 (new RegularExpression())->between(6, 9),
                 'my favourite numbers are 7 and 9',
                 2,
-                [['7', '9']]
+                ['7', '9'],
+                true
+            ],
+            '#3' => [
+                (new RegularExpression())->between(6, 9),
+                'no matches',
+                0,
+                [],
+                false
             ]
         ];
     }
 
-    public function testReplace(): void
-    {
-        $regular = (new RegularExpression())
-            ->modifier(RegularModifier::CASE_INSENSITIVE)
-            ->char('x');
+    /**
+     * @param RegularExpression $regularExpression
+     * @param string|array $replacement
+     * @param string|array $subject
+     * @param int $count
+     * @param string|array $results
+     * @param bool $successful
+     *
+     * @dataProvider dataReplace
+     */
+    public function testReplace(
+        RegularExpression $regularExpression,
+        string|array $replacement,
+        string|array $subject,
+        string|array $results,
+        int $count,
+        bool $successful
+    ): void {
+        $result = $regularExpression->replace($replacement, $subject);
 
-        $regularResult = $regular->replace('replacement', 'this is the x');
-
-        $this->assertEquals('/x/i', $regular->toExpression());
-        $this->assertTrue($regularResult->valid());
-        $this->assertEquals(1, $regularResult->count());
-        $this->assertEquals('this is the replacement', $regularResult->matches());
+        $this->assertTrue($result->isValid());
+        $this->assertEquals($successful, $result->isSuccessful());
+        $this->assertEquals($count, $result->getCount());
+        $this->assertEquals($results, $result->getResponse());
     }
 
-    public function testGrep(): void
+    /**
+     * @return array
+     */
+    public function dataReplace(): array
     {
-        $regular = (new RegularExpression())
-            ->modifier(RegularModifier::CASE_INSENSITIVE)
-            ->char('x');
-
-        $regularResult = $regular->grep(['this is x', 'this is also x', 'this is not']);
-
-        $this->assertEquals('/x/i', $regular->toExpression());
-        $this->assertTrue($regularResult->valid());
-        $this->assertEquals(2, $regularResult->count());
-        $this->assertEquals(['this is x', 'this is also x'], $regularResult->matches());
+        return [
+            '#1' => [
+                (new RegularExpression())->char('x'),
+                '7',
+                'my favourite number is x',
+                'my favourite number is 7',
+                1,
+                true
+            ],
+            '#2' => [
+                (new RegularExpression())->char('\.'),
+                ' ',
+                'this.text.is.dotted',
+                'this text is dotted',
+                3,
+                true
+            ],
+            '#3' => [
+                (new RegularExpression())->char('x'),
+                'replacement',
+                'no matches',
+                'no matches',
+                0,
+                false
+            ],
+        ];
     }
 
-    public function testSplit(): void
-    {
-        $regular = (new RegularExpression())
-            ->modifier(RegularModifier::CASE_INSENSITIVE)
-            ->char('x');
+    /**
+     * @param RegularExpression $regularExpression
+     * @param array $array
+     * @param array $response
+     * @param int $count
+     * @param bool $successful
+     *
+     * @dataProvider dataGrep
+     */
+    public function testGrep(
+        RegularExpression $regularExpression,
+        array $array,
+        array $response,
+        int $count,
+        bool $successful
+    ): void {
+        $result = $regularExpression->grep($array);
 
-        $regularResult = $regular->split('firstxsecondxthird');
-
-        $this->assertEquals('/x/i', $regular->toExpression());
-        $this->assertTrue($regularResult->valid());
-        $this->assertEquals(3, $regularResult->count());
-        $this->assertEquals(['first', 'second', 'third'], $regularResult->matches());
+        $this->assertTrue($result->isValid());
+        $this->assertEquals($successful, $result->isSuccessful());
+        $this->assertEquals($count, $result->getCount());
+        $this->assertEquals($response, $result->getResponse());
     }
 
-    public function testQuote(): void
+    /**
+     * @return array
+     */
+    public function dataGrep(): array
     {
-        $result = (new RegularExpression())->quote('\s [1-8]');
+        return [
+            '#1' => [
+                (new RegularExpression())->char('a-z'),
+                ['a', 'b', 'c', '1'],
+                ['a', 'b', 'c'],
+                3,
+                true
+            ],
+            '#2' => [
+                (new RegularExpression())->char('x'),
+                ['x', 'xxx', 'no'],
+                ['x', 'xxx'],
+                2,
+                true
+            ],
+            '#3' => [
+                (new RegularExpression())->char('x'),
+                ['a', 'b', 'c'],
+                [],
+                0,
+                false
+            ],
+        ];
+    }
 
-        $this->assertEquals('\\\s \[1\-8\]', $result);
+    /**
+     * @param RegularExpression $regularExpression
+     * @param string $subject
+     * @param array $results
+     * @param int $count
+     * @param bool $successful
+     *
+     * @dataProvider dataSplit
+     */
+    public function testSplit(
+        RegularExpression $regularExpression,
+        string $subject,
+        array $results,
+        int $count,
+        bool $successful
+    ): void {
+        $result = $regularExpression->split($subject);
+
+        $this->assertTrue($result->isValid());
+        $this->assertEquals($successful, $result->isSuccessful());
+        $this->assertEquals($count, $result->getCount());
+        $this->assertEquals($results, $result->getResponse());
+    }
+
+    /**
+     * @return array
+     */
+    public function dataSplit(): array
+    {
+        return [
+            '#1' => [
+                (new RegularExpression())->char('x'),
+                'axbxc',
+                ['a', 'b', 'c'],
+                3,
+                true
+            ],
+            '#2' => [
+                (new RegularExpression())->char('d'),
+                'derdiedas',
+                ['', 'er', 'ie', 'as'],
+                4,
+                true
+            ],
+            '#3' => [
+                (new RegularExpression())->char('x'),
+                'no match',
+                ['no match'],
+                1,
+                true
+            ],
+        ];
+    }
+
+    /**
+     * @param string $unquoted
+     * @param string $quoted
+     *
+     * @dataProvider dataQuote
+     */
+    public function testQuote(string $unquoted, string $quoted): void
+    {
+        $result = (new RegularExpression())->quote($unquoted);
+
+        $this->assertEquals($quoted, $result);
+    }
+
+    /**
+     * @return array
+     */
+    public function dataQuote(): array
+    {
+        return [
+            '#1' => [
+                '/\s[1-8]{9}/i',
+                '/\\\s\[1\-8\]\{9\}/i',
+            ],
+            '#2' => [
+                'back\slash',
+                'back\\\slash',
+            ],
+            '#3' => [
+                '$40 für einen G3/400',
+                '\$40 für einen G3/400',
+            ],
+            '#4' => [
+                '.\+*?[^]$(){}=!<>|:-',
+                '\.\\\\\+\*\?\[\^\]\$\(\)\{\}\=\!\<\>\|\:\-'
+            ],
+        ];
     }
 }

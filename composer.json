@@ -26,7 +26,8 @@
   },
   "autoload": {
     "psr-4": {
-      "LukasJakobi\\Regular\\": "src"
+      "LukasJakobi\\Regular\\": "src",
+      "LukasJakobi\\Regular\\Response": "src/response"
     }
   },
   "autoload-dev": {

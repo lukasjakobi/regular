@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace LukasJakobi\Regular;
 
+use LukasJakobi\Regular\Response\RegularGrepResponse;
+use LukasJakobi\Regular\Response\RegularMatchResponse;
+use LukasJakobi\Regular\Response\RegularReplaceResponse;
+use LukasJakobi\Regular\Response\RegularSplitResponse;
+
 class RegularExpression
 {
     protected string $pattern, $modifier, $delimiter;
@@ -23,45 +28,6 @@ class RegularExpression
         $this->pattern = $pattern;
         $this->modifier = $modifier;
         $this->delimiter = $delimiter;
-    }
-
-    /**
-     * Override the pattern value
-     *
-     * @param string $pattern
-     * @return self
-     */
-    public function pattern(string $pattern): self
-    {
-        $this->pattern = $pattern;
-
-        return $this;
-    }
-
-    /**
-     * Set the modifier type
-     *
-     * @param string $modifier
-     * @return self
-     */
-    public function modifier(string $modifier): self
-    {
-        $this->modifier = $modifier;
-
-        return $this;
-    }
-
-    /**
-     * Set the delimiter character
-     *
-     * @param string $delimiter
-     * @return self
-     */
-    public function delimiter(string $delimiter): self
-    {
-        $this->delimiter = $delimiter;
-
-        return $this;
     }
 
     /**
@@ -247,14 +213,15 @@ class RegularExpression
      * @param string $subject the text to search in
      * @param int $flags custom flags
      * @param int $offset custom offset
-     * @return RegularResult
+     * @return RegularMatchResponse
      */
-    public function matches(string $subject, int $flags = 0, int $offset = 0): RegularResult
+    public function matches(string $subject, int $flags = 0, int $offset = 0): RegularMatchResponse
     {
+        $pattern = $this->toExpression();
         $matches = [];
-        $valid = preg_match($this->toExpression(), $subject, $matches, $flags, $offset) === 1;
+        $response = preg_match($pattern, $subject, $matches, $flags, $offset);
 
-        return new RegularResult($matches, $valid, count($matches));
+        return new RegularMatchResponse($pattern, $subject, $matches, $flags, $offset, $response);
     }
 
     /**
@@ -263,14 +230,15 @@ class RegularExpression
      * @param string $subject the text to search in
      * @param int $flags custom flags
      * @param int $offset custom offset
-     * @return RegularResult
+     * @return RegularMatchResponse
      */
-    public function matchesAll(string $subject, int $flags = 0, int $offset = 0): RegularResult
+    public function matchesAll(string $subject, int $flags = 0, int $offset = 0): RegularMatchResponse
     {
+        $pattern = $this->toExpression();
         $matches = [];
-        $result = preg_match_all($this->toExpression(), $subject, $matches, $flags, $offset);
+        $response = preg_match_all($pattern, $subject, $matches, $flags, $offset);
 
-        return new RegularResult($matches, $result !== false, $result);
+        return new RegularMatchResponse($pattern, $subject, $matches, $flags, $offset, $response);
     }
 
     /**
@@ -279,14 +247,15 @@ class RegularExpression
      * @param string|array $replacement the string to replace with
      * @param string|array $subject the text to search in
      * @param int $limit limit of results (leave empty to get all results)
-     * @param int|null $count amount of replacements
-     * @return RegularResult
+     * @return RegularReplaceResponse
      */
-    public function replace(string|array $replacement, string|array $subject, int $limit = -1,  int &$count = null): RegularResult
+    public function replace(string|array $replacement, string|array $subject, int $limit = -1): RegularReplaceResponse
     {
-        $result = preg_replace($this->toExpression(), $replacement, $subject, $limit, $count);
+        $pattern = $this->toExpression();
+        $count = 0;
+        $result = preg_replace($pattern, $replacement, $subject, $limit, $count);
 
-        return new RegularResult($result, $result !== null, is_countable($result) ? count($result) : 1);
+        return new RegularReplaceResponse($pattern, $replacement, $subject, $limit, $count, $result);
     }
 
     /**
@@ -294,13 +263,14 @@ class RegularExpression
      *
      * @param array $array the array to grep out of
      * @param int $flags custom flags
-     * @return RegularResult
+     * @return RegularGrepResponse
      */
-    public function grep(array $array, int $flags = 0): RegularResult
+    public function grep(array $array, int $flags = 0): RegularGrepResponse
     {
-        $result = preg_grep($this->toExpression(), $array, $flags);
+        $pattern = $this->toExpression();
+        $result = preg_grep($pattern, $array, $flags);
 
-        return new RegularResult($result, $result !== false, count($result));
+        return new RegularGrepResponse($pattern, $array, $flags, $result);
     }
 
     /**
@@ -309,13 +279,14 @@ class RegularExpression
      * @param string $subject
      * @param int $limit
      * @param int $flags custom flags
-     * @return RegularResult
+     * @return RegularSplitResponse
      */
-    public function split(string $subject, int $limit = -1, int $flags = 0): RegularResult
+    public function split(string $subject, int $limit = -1, int $flags = 0): RegularSplitResponse
     {
-        $result = preg_split($this->toExpression(), $subject, $limit, $flags);
+        $pattern = $this->toExpression();
+        $response = preg_split($pattern, $subject, $limit, $flags);
 
-        return new RegularResult($result, $result !== false, count($result));
+        return new RegularSplitResponse($pattern, $subject, $limit, $flags, $response);
     }
 
     /**
@@ -331,8 +302,24 @@ class RegularExpression
     }
 
     /**
-     * Get the modifier of the regular expression
-     *
+     * @return string
+     */
+    public function getPattern(): string
+    {
+        return $this->pattern;
+    }
+
+    /**
+     * @param string $pattern
+     * @return self
+     */
+    public function setPattern(string $pattern): self
+    {
+        $this->pattern = $pattern;
+        return $this;
+    }
+
+    /**
      * @return string
      */
     public function getModifier(): string
@@ -341,8 +328,16 @@ class RegularExpression
     }
 
     /**
-     * Get the delimeter of the regular expression
-     *
+     * @param string $modifier
+     * @return self
+     */
+    public function setModifier(string $modifier): self
+    {
+        $this->modifier = $modifier;
+        return $this;
+    }
+
+    /**
      * @return string
      */
     public function getDelimiter(): string
@@ -351,12 +346,12 @@ class RegularExpression
     }
 
     /**
-     * Get the pattern of the regular expression
-     *
-     * @return string
+     * @param string $delimiter
+     * @return self
      */
-    public function getPattern(): string
+    public function setDelimiter(string $delimiter): self
     {
-        return $this->pattern;
+        $this->delimiter = $delimiter;
+        return $this;
     }
 }

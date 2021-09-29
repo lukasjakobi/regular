@@ -1,12 +1,12 @@
 ```asciidoc
-  _____                  _            
- |  __ \                | |           
- | |__) |___  __ _ _   _| | __ _ _ __ 
- |  _  // _ \/ _` | | | | |/ _` | '__|
- | | \ \  __/ (_| | |_| | | (_| | |   
- |_|  \_\___|\__, |\__,_|_|\__,_|_|   
-              __/ |                   
-             |___/                                                                  
+______                 _              _____                             _                 
+| ___ \               | |            |  ___|                           (_)                
+| |_/ /___  __ _ _   _| | __ _ _ __  | |____  ___ __  _ __ ___  ___ ___ _  ___  _ __  ___ 
+|    // _ \/ _` | | | | |/ _` | "__| |  __\ \/ / "_ \| "__/ _ \/ __/ __| |/ _ \| "_ \/ __|
+| |\ \  __/ (_| | |_| | | (_| | |    | |___>  <| |_) | | |  __/\__ \__ \ | (_) | | | \__ \
+\_| \_\___|\__, |\__,_|_|\__,_|_|    \____/_/\_\ .__/|_|  \___||___/___/_|\___/|_| |_|___/
+            __/ |                              | |                                        
+           |___/                               |_|                                                                      
 ```
 ## Regular - PHP Regex Builder & preg_* Interface
 
@@ -26,25 +26,41 @@ Or download [the latest release](https://github.com/lukasjakobi/regular/releases
 
 https://github.com/lukasjakobi/regular/wiki
 
+### Installation Guide
 
-## Examples
+https://github.com/lukasjakobi/regular/wiki/Installation
 
-## Telephone Number
+# Examples
+
+## Match (preg_match)
+
+Check whether your pattern matches the subject
+
+### Telephone Number
 ```php
 use LukasJakobi\Regular\RegularExpression;
 
 $regular = (new RegularExpression())
-    ->char('+')
+    ->char("+")
     ->digit()
     ->repeat(1, 3)
     ->whitespace()
     ->digit()
     ->repeat(4, 14);
 
-echo $regular->matches('+49 123456789')->valid();
+echo $regular->toExpression();
+echo $regular->matches("+49 123456789")->isValid();
 ```
 
-## Band Name
+#### Output
+```regexp
+/+[0-9]{1,3}\s[0-9]{4,14}/
+```
+```
+true
+```
+
+### Band Name
 
 ```php
 use LukasJakobi\Regular\RegularExpression;
@@ -65,7 +81,7 @@ echo $regular->toExpression();
 /[1-8]{3}\sStraßenbande/i
 ```
 
-## Postcode
+### Postcode
 
 ```php
 use LukasJakobi\Regular\RegularExpression;
@@ -75,7 +91,7 @@ $regular = (new RegularExpression())
     ->repeat(5);
 
 echo $regular->toExpression();
-echo $regular->matches('06258')->valid();
+echo $regular->matches("06258")->isValid();
 ```
 
 #### Output
@@ -84,4 +100,60 @@ echo $regular->matches('06258')->valid();
 ```
 ```
 true
+```
+
+## Replace (preg_replace)
+Replace texts
+
+```php
+use LukasJakobi\Regular\RegularExpression;
+
+$subject = "this_text_will_be_converted";
+$regular = (new RegularExpression())
+    ->char("_");
+
+echo $regular->replace(" ", $subject)->getResponse();
+```
+
+#### Output
+```
+this text will be converted
+```
+
+## Split (preg_split)
+
+Split input string at pattern
+
+```php
+use LukasJakobi\Regular\RegularExpression;
+
+$subject = "this_text_will_be_converted";
+$regular = (new RegularExpression())
+    ->char("_");
+
+echo $regular->split($subject)->getResponse();
+```
+
+#### Output
+```json
+["this", "text", "will", "be", "converted"]
+```
+
+## Grep (preg_grep)
+
+Greps strings out of an array, that match your pattern
+
+```php
+use LukasJakobi\Regular\RegularExpression;
+
+$subject = ["i am home", "are you home", "yes i am"];
+$regular = (new RegularExpression())
+    ->charset("home");
+
+echo $regular->grep($subject)->getResponse();
+```
+
+#### Output
+```json
+["i am home", "are you home"]
 ```
