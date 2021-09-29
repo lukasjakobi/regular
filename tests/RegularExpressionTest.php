@@ -430,4 +430,376 @@ class RegularExpressionTest extends TestCase
             ],
         ];
     }
+
+    /**
+     * @param int $m
+     * @param int $n
+     * @param string $delimiter
+     * @param string $modifier
+     *
+     * @dataProvider dataBetween
+     */
+    public function testBetween(int $m, int $n, string $delimiter, string $modifier): void
+    {
+        $regularExpression = (new RegularExpression())
+            ->setDelimiter($delimiter)
+            ->setModifier($modifier)
+            ->between($m, $n);
+
+        $pattern = sprintf(
+            '[%s-%s]',
+            min($m, $n),
+            max($m, $n)
+        );
+
+        $expression = sprintf(
+            '%s[%s-%s]%s%s',
+            $delimiter,
+            min($m, $n),
+            max($m, $n),
+            $delimiter,
+            $modifier
+        );
+
+        $this->assertEquals($pattern, $regularExpression->getPattern());
+        $this->assertEquals($expression, $regularExpression->toExpression());
+        $this->assertEquals($delimiter, $regularExpression->getDelimiter());
+        $this->assertEquals($modifier, $regularExpression->getModifier());
+    }
+
+    public function dataBetween(): array
+    {
+        return [
+            [1, 2, RegularDelimiter::SLASH, RegularModifier::CASE_INSENSITIVE],
+            [5, 3, RegularDelimiter::HASH, RegularModifier::UTF_8_ENCODED],
+            [7, 0, RegularDelimiter::PERCENTAGE, RegularModifier::MULTI_LINE],
+            [7, 7, RegularDelimiter::PLUS, RegularModifier::NONE],
+        ];
+    }
+
+    /**
+     * @param int|null $n
+     * @param string $delimiter
+     * @param string $modifier
+     *
+     * @dataProvider dataDigit
+     */
+    public function testDigit(?int $n, string $delimiter, string $modifier): void
+    {
+        $regularExpression = (new RegularExpression())
+            ->setDelimiter($delimiter)
+            ->setModifier($modifier)
+            ->digit($n);
+
+        $pattern = sprintf(
+            '[%s]',
+            $n ?? '0-9'
+        );
+
+        $expression = sprintf(
+            '%s[%s]%s%s',
+            $delimiter,
+            $n ?? '0-9',
+            $delimiter,
+            $modifier
+        );
+
+        $this->assertEquals($pattern, $regularExpression->getPattern());
+        $this->assertEquals($expression, $regularExpression->toExpression());
+        $this->assertEquals($delimiter, $regularExpression->getDelimiter());
+        $this->assertEquals($modifier, $regularExpression->getModifier());
+    }
+
+    /**
+     * @param int|null $n
+     * @param string $delimiter
+     * @param string $modifier
+     *
+     * @dataProvider dataDigit
+     */
+    public function testNotDigit(?int $n, string $delimiter, string $modifier): void
+    {
+        $regularExpression = (new RegularExpression())
+            ->setDelimiter($delimiter)
+            ->setModifier($modifier)
+            ->notDigit($n);
+
+        $pattern = sprintf(
+            '[^%s]',
+            $n ?? '0-9'
+        );
+
+        $expression = sprintf(
+            '%s[^%s]%s%s',
+            $delimiter,
+            $n ?? '0-9',
+            $delimiter,
+            $modifier
+        );
+
+        $this->assertEquals($pattern, $regularExpression->getPattern());
+        $this->assertEquals($expression, $regularExpression->toExpression());
+        $this->assertEquals($delimiter, $regularExpression->getDelimiter());
+        $this->assertEquals($modifier, $regularExpression->getModifier());
+    }
+
+    public function dataDigit(): array
+    {
+        return [
+            [1, RegularDelimiter::AT, RegularModifier::CASE_INSENSITIVE],
+            [5, RegularDelimiter::PLUS, RegularModifier::UTF_8_ENCODED],
+            [7, RegularDelimiter::PERCENTAGE, RegularModifier::MULTI_LINE],
+            [null, RegularDelimiter::PLUS, RegularModifier::NONE],
+        ];
+    }
+
+    /**
+     * @param string $char
+     * @param string $delimiter
+     * @param string $modifier
+     *
+     * @dataProvider dataChar
+     */
+    public function testChar(string $char, string $delimiter, string $modifier): void
+    {
+        $regularExpression = (new RegularExpression())
+            ->setDelimiter($delimiter)
+            ->setModifier($modifier)
+            ->char($char);
+
+        $pattern = sprintf(
+            strlen($char) > 1 ? '[%s]' : '%s',
+            $char
+        );
+
+        $expression = sprintf(
+            strlen($char) > 1 ? '%s[%s]%s%s' : '%s%s%s%s',
+            $delimiter,
+            $char,
+            $delimiter,
+            $modifier
+        );
+
+        $this->assertEquals($pattern, $regularExpression->getPattern());
+        $this->assertEquals($expression, $regularExpression->toExpression());
+        $this->assertEquals($delimiter, $regularExpression->getDelimiter());
+        $this->assertEquals($modifier, $regularExpression->getModifier());
+    }
+
+    /**
+     * @param string $char
+     * @param string $delimiter
+     * @param string $modifier
+     *
+     * @dataProvider dataChar
+     */
+    public function testNotChar(string $char, string $delimiter, string $modifier): void
+    {
+        $regularExpression = (new RegularExpression())
+            ->setDelimiter($delimiter)
+            ->setModifier($modifier)
+            ->notChar($char);
+
+        $pattern = sprintf(
+            '[^%s]',
+            $char
+        );
+
+        $expression = sprintf(
+            '%s[^%s]%s%s',
+            $delimiter,
+            $char,
+            $delimiter,
+            $modifier
+        );
+
+        $this->assertEquals($pattern, $regularExpression->getPattern());
+        $this->assertEquals($expression, $regularExpression->toExpression());
+        $this->assertEquals($delimiter, $regularExpression->getDelimiter());
+        $this->assertEquals($modifier, $regularExpression->getModifier());
+    }
+
+    /**
+     * @param string $charset
+     * @param string $delimiter
+     * @param string $modifier
+     *
+     * @dataProvider dataChar
+     */
+    public function testCharset(string $charset, string $delimiter, string $modifier): void
+    {
+        $regularExpression = (new RegularExpression())
+            ->setDelimiter($delimiter)
+            ->setModifier($modifier)
+            ->charset($charset);
+
+        $pattern = sprintf(
+            '%s',
+            $charset
+        );
+
+        $expression = sprintf(
+            '%s%s%s%s',
+            $delimiter,
+            $charset,
+            $delimiter,
+            $modifier
+        );
+
+        $this->assertEquals($pattern, $regularExpression->getPattern());
+        $this->assertEquals($expression, $regularExpression->toExpression());
+        $this->assertEquals($delimiter, $regularExpression->getDelimiter());
+        $this->assertEquals($modifier, $regularExpression->getModifier());
+    }
+
+    public function dataChar(): array
+    {
+        return [
+            ['a', RegularDelimiter::AT, RegularModifier::CASE_INSENSITIVE],
+            ['a-z', RegularDelimiter::PLUS, RegularModifier::UTF_8_ENCODED],
+            ['v', RegularDelimiter::PERCENTAGE, RegularModifier::MULTI_LINE],
+            ['t', RegularDelimiter::PLUS, RegularModifier::NONE],
+        ];
+    }
+
+    /**
+     * @param string $add
+     * @param string $delimiter
+     * @param string $modifier
+     *
+     * @dataProvider dataAdd
+     */
+    public function testAdd(string $add, string $delimiter, string $modifier): void
+    {
+        $regularExpression = (new RegularExpression())
+            ->setDelimiter($delimiter)
+            ->setModifier($modifier)
+            ->add($add);
+
+        $pattern = sprintf(
+            '%s',
+            $add
+        );
+
+        $expression = sprintf(
+            '%s%s%s%s',
+            $delimiter,
+            $add,
+            $delimiter,
+            $modifier
+        );
+
+        $this->assertEquals($pattern, $regularExpression->getPattern());
+        $this->assertEquals($expression, $regularExpression->toExpression());
+        $this->assertEquals($delimiter, $regularExpression->getDelimiter());
+        $this->assertEquals($modifier, $regularExpression->getModifier());
+    }
+
+    public function dataAdd(): array
+    {
+        return [
+            ['a', RegularDelimiter::AT, RegularModifier::CASE_INSENSITIVE],
+            ['a-z', RegularDelimiter::PLUS, RegularModifier::UTF_8_ENCODED],
+            ['v', RegularDelimiter::PERCENTAGE, RegularModifier::MULTI_LINE],
+            ['t', RegularDelimiter::PLUS, RegularModifier::NONE],
+        ];
+    }
+
+    public function testPattern(): void
+    {
+        $pattern = '[1-9]';
+        $regularExpression = (new RegularExpression())
+            ->setPattern('[1-9]');
+
+        $this->assertEquals($pattern, $regularExpression->getPattern());
+    }
+
+    public function testStartOfString(): void
+    {
+        $subject = '187';
+        $regularExpression = (new RegularExpression())
+            ->startOfString()
+            ->setPattern('[1-9]');
+
+        $result = $regularExpression->matches($subject);
+
+        $this->assertTrue($result->isValid());
+        $this->assertTrue($result->isSuccessful());
+    }
+
+    public function testEndOfString(): void
+    {
+        $subject = '187';
+        $regularExpression = (new RegularExpression())
+            ->setPattern('[1-9]')
+            ->endOfString();
+
+        $result = $regularExpression->matches($subject);
+
+        $this->assertTrue($result->isValid());
+        $this->assertTrue($result->isSuccessful());
+    }
+
+    public function testWhitespace(): void
+    {
+        $subject = '1 8 7';
+        $regularExpression = (new RegularExpression())
+            ->whitespace();
+
+        $result = $regularExpression->matches($subject);
+
+        $this->assertTrue($result->isValid());
+        $this->assertTrue($result->isSuccessful());
+        $this->assertEquals(1, $result->getCount());
+        $this->assertEquals([' '], $result->getMatches());
+        $this->assertEquals(0, $result->getFlags());
+        $this->assertEquals($subject, $result->getSubject());
+    }
+
+    /**
+     * @param RegularExpression $regularExpression
+     * @param string $subject
+     * @param int $m
+     * @param int|null $n
+     * @param string $pattern
+     *
+     * @dataProvider dataRepeat
+     */
+    public function testRepeat(
+        RegularExpression $regularExpression,
+        string $subject,
+        int $m,
+        ?int $n,
+        string $pattern
+    ): void {
+        $result = $regularExpression->repeat($m, $n)->matches($subject);
+
+        $this->assertTrue($result->isValid());
+        $this->assertTrue($result->isSuccessful());
+        $this->assertEquals($subject, $result->getSubject());
+        $this->assertEquals($pattern, $result->getPattern());
+    }
+
+    /**
+     * @return array
+     */
+    public function dataRepeat(): array
+    {
+        return [
+            '#1' => [
+                (new RegularExpression())->digit(),
+                '187',
+                2,
+                null,
+                '/[0-9]{2}/'
+            ],
+            '#2' => [
+                (new RegularExpression())->digit(),
+                '187',
+                1,
+                3,
+                '/[0-9]{1,3}/'
+            ]
+        ];
+    }
 }

@@ -39,7 +39,7 @@ class RegularExpression
      */
     public function between(int $m, int $n): self
     {
-        $this->pattern .= sprintf('[%s-%s]', $m, $n);
+        $this->pattern .= sprintf('[%s-%s]', min($m, $n), max($m, $n));
 
         return $this;
     }
