@@ -118,6 +118,36 @@ class RegularExpression
     }
 
     /**
+     * Add a wildcard pattern
+     *
+     * @param bool $unlimited true equals unlimited characters, false equals one character
+     * @return self
+     */
+    public function wildcard(bool $unlimited = true): self
+    {
+        if ($unlimited) {
+            $this->pattern .= '.*';
+        } else {
+            $this->pattern .= '.';
+        }
+
+        return $this;
+    }
+
+    /**
+     * Add an alternate operator
+     *
+     * @param array $words
+     * @return self
+     */
+    public function alternate(array $words): self
+    {
+        $this->pattern .= sprintf('(%s)', implode('|', $words));
+
+        return $this;
+    }
+
+    /**
      * Add a custom regular expression part to the pattern
      *
      * @param string $pattern
@@ -174,6 +204,30 @@ class RegularExpression
     }
 
     /**
+     * Add a linebreak operator
+     *
+     * @return self
+     */
+    public function linebreak(): self
+    {
+        $this->pattern .= '\R';
+
+        return $this;
+    }
+
+    /**
+     * Add a tab operator
+     *
+     * @return self
+     */
+    public function tab(): self
+    {
+        $this->pattern .= '\t';
+
+        return $this;
+    }
+
+    /**
      * Only match subjects that start with this pattern
      *
      * @return $this
@@ -210,13 +264,14 @@ class RegularExpression
     /**
      * Matches subject against pattern
      *
-     * @param string $subject the text to search in
+     * @param string $subject the text to search in, will be quoted
      * @param int $flags custom flags
      * @param int $offset custom offset
      * @return RegularMatchResponse
      */
     public function matches(string $subject, int $flags = 0, int $offset = 0): RegularMatchResponse
     {
+        $subject = $this->quote($subject);
         $pattern = $this->toExpression();
         $matches = [];
         $response = preg_match($pattern, $subject, $matches, $flags, $offset);
@@ -227,13 +282,14 @@ class RegularExpression
     /**
      * Matches subject against pattern
      *
-     * @param string $subject the text to search in
+     * @param string $subject the text to search in, will be quoted
      * @param int $flags custom flags
      * @param int $offset custom offset
      * @return RegularMatchResponse
      */
     public function matchesAll(string $subject, int $flags = 0, int $offset = 0): RegularMatchResponse
     {
+        $subject = $this->quote($subject);
         $pattern = $this->toExpression();
         $matches = [];
         $response = preg_match_all($pattern, $subject, $matches, $flags, $offset);
