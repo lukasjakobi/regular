@@ -4,29 +4,27 @@ declare(strict_types=1);
 
 namespace LukasJakobi\Regular;
 
-use LukasJakobi\Regular\Response\RegularGrepResponse;
 use LukasJakobi\Regular\Response\RegularMatchResponse;
-use LukasJakobi\Regular\Response\RegularReplaceResponse;
-use LukasJakobi\Regular\Response\RegularSplitResponse;
 
 class RegularExpression
 {
-    protected string $pattern, $modifier, $delimiter;
+    protected string $pattern, $delimiter;
+    protected string|array $modifiers;
 
     /**
      * RegularExpression constructor.
      *
      * @param string $pattern the regular expression, leave empty if you want to use the pattern builder
      * @param string $delimiter the regular delimiter
-     * @param string $modifier the regular modifier mode
+     * @param string|array $modifiers the regular modifier mode(s)
      */
     public function __construct(
         string $pattern = '',
         string $delimiter = RegularDelimiter::SLASH,
-        string $modifier = RegularModifier::NONE
+        string|array $modifiers = RegularModifier::NONE
     ) {
         $this->pattern = $pattern;
-        $this->modifier = $modifier;
+        $this->modifiers = $modifiers;
         $this->delimiter = $delimiter;
     }
 
@@ -37,7 +35,7 @@ class RegularExpression
      * @param int $n
      * @return self
      */
-    public function between(int $m, int $n): self
+    public function addDigitBetween(int $m, int $n): self
     {
         $this->pattern .= sprintf('[%s-%s]', min($m, $n), max($m, $n));
 
@@ -45,14 +43,31 @@ class RegularExpression
     }
 
     /**
+     * Add a digit to the pattern
+     *
+     * @param int $number
+     * @return self
+     * @throws RegularError
+     */
+    public function addDigit(int $number): self
+    {
+        if ($number > 9 || $number < 0) {
+            throw new RegularError(RegularError::DIGIT_RANGE_ERROR);
+        }
+
+        $this->pattern .= sprintf('[%s]', $number);
+
+        return $this;
+    }
+
+    /**
      * Add digit to the pattern
      *
-     * @param int|null $number
      * @return self
      */
-    public function digit(int $number = null): self
+    public function addAnyDigit(): self
     {
-        $this->pattern .= sprintf('[%s]', $number ?? '0-9');
+        $this->pattern .= '\d';
 
         return $this;
     }
@@ -60,12 +75,30 @@ class RegularExpression
     /**
      * Exclude digit from the pattern
      *
-     * @param int|null $number
      * @return self
      */
-    public function notDigit(int $number = null): self
+    public function addNoDigit(): self
     {
-        $this->pattern .= sprintf('[^%s]', $number ?? '0-9');
+        $this->pattern .= '\D';
+
+        return $this;
+    }
+
+    /**
+     * Add character range to pattern
+     *
+     * @param string $charFrom
+     * @param string $charTo
+     * @return self
+     * @throws RegularError
+     */
+    public function addCharRange(string $charFrom, string $charTo): self
+    {
+        if (strlen($charFrom) > 1 || strlen($charTo) > 1) {
+            throw new RegularError(RegularError::CHARACTER_LENGTH_ERROR);
+        }
+
+        $this->pattern .= sprintf('[%s-%s]', $charFrom, $charTo);
 
         return $this;
     }
@@ -73,15 +106,15 @@ class RegularExpression
     /**
      * Add char to the pattern
      *
-     * @param string $char
+     * @param string $chars
      * @return self
      */
-    public function char(string $char): self
+    public function addChars(string $chars): self
     {
-        if (strlen($char) > 1) {
-            $this->pattern .= sprintf('[%s]', $char);
+        if (strlen($chars) > 1) {
+            $this->pattern .= sprintf('[%s]', $chars);
         } else {
-            $this->pattern .= $char;
+            $this->pattern .= $chars;
         }
 
         return $this;
@@ -90,46 +123,60 @@ class RegularExpression
     /**
      * Exclude char from the pattern
      *
-     * @param string $char
+     * @param string $chars
      * @return self
      */
-    public function notChar(string $char): self
+    public function addCharsExcept(string $chars): self
     {
-        $this->pattern .= sprintf('[^%s]', $char);
+        $this->pattern .= sprintf('[^%s]', $chars);
 
         return $this;
     }
 
     /**
-     * Add charset to the pattern
+     * Add any character to the pattern
      *
-     * @param string $charset
      * @return self
      */
-    public function charset(string $charset): self
+    public function addAnyCharacter(): self
     {
-        if (strlen($charset) === 1) {
-            return $this->char($charset);
-        }
-
-        $this->pattern .= $charset;
+        $this->pattern .= '.';
 
         return $this;
     }
 
     /**
-     * Add a wildcard pattern
+     * Add previous expressions zero or more times to the pattern
      *
-     * @param bool $unlimited true equals unlimited characters, false equals one character
      * @return self
      */
-    public function wildcard(bool $unlimited = true): self
+    public function addZeroOrMoreTimes(): self
     {
-        if ($unlimited) {
-            $this->pattern .= '.*';
-        } else {
-            $this->pattern .= '.';
-        }
+        $this->pattern .= '.*';
+
+        return $this;
+    }
+
+    /**
+     * Add previous expressions one or more times to the pattern
+     *
+     * @return self
+     */
+    public function addOneOrMoreTimes(): self
+    {
+        $this->pattern .= '+';
+
+        return $this;
+    }
+
+    /**
+     * Makes the previous expression optional
+     *
+     * @return self
+     */
+    public function addOptionality(): self
+    {
+        $this->pattern .= '?';
 
         return $this;
     }
@@ -140,7 +187,7 @@ class RegularExpression
      * @param array $words
      * @return self
      */
-    public function alternate(array $words): self
+    public function addAlternate(array $words): self
     {
         $this->pattern .= sprintf('(%s)', implode('|', $words));
 
@@ -153,7 +200,7 @@ class RegularExpression
      * @param string $pattern
      * @return $this
      */
-    public function add(string $pattern): self
+    public function addCustom(string $pattern): self
     {
         $this->pattern .= $pattern;
 
@@ -166,7 +213,7 @@ class RegularExpression
      * @param RegularGroup $group the group to add to the
      * @return $this
      */
-    public function group(RegularGroup $group): self
+    public function addCapturingGroup(RegularGroup $group): self
     {
         $this->pattern .= sprintf('(%s)', $group->getPattern());
 
@@ -174,19 +221,66 @@ class RegularExpression
     }
 
     /**
+     * Add a group expression to the pattern
+     *
+     * @param RegularGroup $group the group to add to the
+     * @return $this
+     */
+    public function addNonCapturingGroup(RegularGroup $group): self
+    {
+        $this->pattern .= sprintf('(?:%s)', $group->getPattern());
+
+        return $this;
+    }
+
+    /**
      * Repeats the last instruction of the pattern a minimum of m and a maximum of n times
      *
-     * @param int $m minimum amount of repeats
-     * @param int|null $n maximum amount of repeats
+     * @param int $from minimum amount of repeats
+     * @param int $to maximum amount of repeats
      * @return self
      */
-    public function repeat(int $m, int $n = null): self
+    public function repeatBetween(int $from, int $to): self
     {
-        if ($n === null) {
-            $this->pattern .= sprintf('{%s}', $m);
-        } else {
-            $this->pattern .= sprintf('{%s,%s}', $m, $n);
-        }
+        $this->pattern .= sprintf('{%s,%s}', $from, $to);
+
+        return $this;
+    }
+
+    /**
+     * Repeats a pattern at least $times times
+     *
+     * @param int $times
+     * @return $this
+     */
+    public function repeatAtLeast(int $times): self
+    {
+        $this->pattern .= sprintf('{%s,}', $times);
+
+        return $this;
+    }
+
+    /**
+     * Repeats a pattern at most $times times
+     *
+     * @param int $times
+     * @return $this
+     */
+    public function repeatAtMost(int $times): self
+    {
+        $this->pattern .= sprintf('{0,%s}', $times);
+
+        return $this;
+    }
+    /**
+     * Repeats a pattern exactly $times times
+     *
+     * @param int $times
+     * @return $this
+     */
+    public function repeatExactly(int $times): self
+    {
+        $this->pattern .= sprintf('{%s}', $times);
 
         return $this;
     }
@@ -196,7 +290,7 @@ class RegularExpression
      *
      * @return $this
      */
-    public function whitespace(): self
+    public function addWhitespace(): self
     {
         $this->pattern .= '\s';
 
@@ -208,9 +302,9 @@ class RegularExpression
      *
      * @return self
      */
-    public function linebreak(): self
+    public function addLinebreak(): self
     {
-        $this->pattern .= '\R';
+        $this->pattern .= '\n';
 
         return $this;
     }
@@ -220,7 +314,7 @@ class RegularExpression
      *
      * @return self
      */
-    public function tab(): self
+    public function addTab(): self
     {
         $this->pattern .= '\t';
 
@@ -258,7 +352,22 @@ class RegularExpression
      */
     public function toExpression(): string
     {
-        return $this->delimiter . $this->pattern . $this->delimiter . $this->modifier;
+        return $this->delimiter . $this->pattern . $this->delimiter . $this->toModifier($this->modifiers);
+    }
+
+    /**
+     * Returns the modifier array as a string if necessary
+     *
+     * @param string|array $modifiers
+     * @return string
+     */
+    private function toModifier(string|array $modifiers): string
+    {
+        if (is_array($modifiers)) {
+            return implode($modifiers);
+        }
+
+        return $modifiers;
     }
 
     /**
@@ -276,7 +385,7 @@ class RegularExpression
         $matches = [];
         $response = preg_match($pattern, $subject, $matches, $flags, $offset);
 
-        return new RegularMatchResponse($pattern, $subject, $matches, $flags, $offset, $response);
+        return new RegularMatchResponse($matches, $response);
     }
 
     /**
@@ -294,7 +403,7 @@ class RegularExpression
         $matches = [];
         $response = preg_match_all($pattern, $subject, $matches, $flags, $offset);
 
-        return new RegularMatchResponse($pattern, $subject, $matches, $flags, $offset, $response);
+        return new RegularMatchResponse($matches, $response);
     }
 
     /**
@@ -303,15 +412,13 @@ class RegularExpression
      * @param string|array $replacement the string to replace with
      * @param string|array $subject the text to search in
      * @param int $limit limit of results (leave empty to get all results)
-     * @return RegularReplaceResponse
+     * @return array|string
      */
-    public function replace(string|array $replacement, string|array $subject, int $limit = -1): RegularReplaceResponse
+    public function replace(string|array $replacement, string|array $subject, int $limit = -1): array|string
     {
-        $pattern = $this->toExpression();
         $count = 0;
-        $result = preg_replace($pattern, $replacement, $subject, $limit, $count);
 
-        return new RegularReplaceResponse($pattern, $replacement, $subject, $limit, $count, $result);
+        return preg_replace($this->toExpression(), $replacement, $subject, $limit, $count);
     }
 
     /**
@@ -319,14 +426,11 @@ class RegularExpression
      *
      * @param array $array the array to grep out of
      * @param int $flags custom flags
-     * @return RegularGrepResponse
+     * @return array|false
      */
-    public function grep(array $array, int $flags = 0): RegularGrepResponse
+    public function grep(array $array, int $flags = 0):  array|false
     {
-        $pattern = $this->toExpression();
-        $result = preg_grep($pattern, $array, $flags);
-
-        return new RegularGrepResponse($pattern, $array, $flags, $result);
+        return preg_grep($this->toExpression(), $array, $flags);
     }
 
     /**
@@ -335,14 +439,11 @@ class RegularExpression
      * @param string $subject
      * @param int $limit
      * @param int $flags custom flags
-     * @return RegularSplitResponse
+     * @return array|false
      */
-    public function split(string $subject, int $limit = -1, int $flags = 0): RegularSplitResponse
+    public function split(string $subject, int $limit = -1, int $flags = 0): array|false
     {
-        $pattern = $this->toExpression();
-        $response = preg_split($pattern, $subject, $limit, $flags);
-
-        return new RegularSplitResponse($pattern, $subject, $limit, $flags, $response);
+        return preg_split($this->toExpression(), $subject, $limit, $flags);
     }
 
     /**
@@ -376,20 +477,20 @@ class RegularExpression
     }
 
     /**
-     * @return string
+     * @return string|array
      */
-    public function getModifier(): string
+    public function getModifiers(): string|array
     {
-        return $this->modifier;
+        return $this->modifiers;
     }
 
     /**
-     * @param string $modifier
+     * @param string|array $modifiers
      * @return self
      */
-    public function setModifier(string $modifier): self
+    public function setModifiers(string|array $modifiers): self
     {
-        $this->modifier = $modifier;
+        $this->modifiers = $modifiers;
         return $this;
     }
 

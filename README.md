@@ -13,7 +13,6 @@ ______                 _              _____                             _
 [![version](https://shields.io/github/v/release/lukasjakobi/regular?include_prereleases&color=217FA4)](https://github.com/lukasjakobi/regular/releases)
 [![php](https://shields.io/github/languages/top/lukasjakobi/regular?color=2A8EA6)]()
 [![php-v](https://shields.io/packagist/php-v/lukasjakobi/regular?color=339DA9)]()
-[![codecoverage](https://img.shields.io/static/v1?label=code%20coverage&message=100%&color=3BACAB)]()
 [![licence](https://shields.io/github/license/lukasjakobi/regular?color=44BBAD)]()
 
 ## Installation
@@ -41,16 +40,17 @@ https://github.com/lukasjakobi/regular/wiki/Installation
 Check whether your pattern matches the subject
 
 ### Telephone Number
+
 ```php
 use LukasJakobi\Regular\RegularExpression;
 
 $regular = (new RegularExpression())
-    ->char("+")
-    ->digit()
-    ->repeat(1, 3)
-    ->whitespace()
-    ->digit()
-    ->repeat(4, 14);
+    ->addChars("+")
+    ->addAnyDigit()
+    ->repeatBetween(1, 3)
+    ->addWhitespace()
+    ->addAnyDigit()
+    ->repeatBetween(4, 14);
 
 echo $regular->toExpression();
 echo $regular->matches("+49 123456789")->isValid();
@@ -58,49 +58,51 @@ echo $regular->matches("+49 123456789")->isValid();
 
 #### Output
 ```regexp
-/+[0-9]{1,3}\s[0-9]{4,14}/
+/+\d{1,3}\s\d{4,14}/
 ```
 ```
 true
 ```
 
-### Band Name
+### Mysterious Band Name
 
 ```php
 use LukasJakobi\Regular\RegularExpression;
 use LukasJakobi\Regular\RegularModifier;
 
 $regular = (new RegularExpression())
-    ->modifier(RegularModifier::CASE_INSENSITIVE)
-    ->between(1, 8)
-    ->repeat(3)
-    ->whitespace()
-    ->charset("Straßenbande");
+    ->setModifiers([RegularModifier::INSENSITIVE, RegularModifier::GLOBAL])
+    ->addDigitBetween(1, 8)
+    ->repeatExactly(3)
+    ->addWhitespace()
+    ->addCustom("Straßenbande");
 
 echo $regular->toExpression();
 ```
 
 #### Output
 ```regexp
-/[1-8]{3}\sStraßenbande/i
+/[1-8]{3}\sStraßenbande/ig
 ```
 
-### Postcode
+### Username
 
 ```php
 use LukasJakobi\Regular\RegularExpression;
 
 $regular = (new RegularExpression())
-    ->digit()
-    ->repeat(5);
-
+    ->startOfString()
+    ->addCustom('[a-zA-Z0-9_-]') // your custom rules for username
+    ->repeatBetween(3, 16) // the length of the username
+    ->endOfString();
+    
 echo $regular->toExpression();
-echo $regular->matches("06258")->isValid();
+echo $regular->matches("Steve")->isValid();
 ```
 
 #### Output
 ```regexp
-/[0-9]{5}/
+/^[a-zA-Z0-9_-]{3,16}$/
 ```
 ```
 true
@@ -113,17 +115,24 @@ Replace texts
 
 ```php
 use LukasJakobi\Regular\RegularExpression;
+use LukasJakobi\Regular\RegularGroup;
 
-$subject = "this_text_will_be_converted";
+$subject = ["13.10.2021", "24.12.1990", "09.10.2000"];
+
+$group = new RegularGroup();
+$group->addAnyDigit()->repeatBetween(2, 4);
+
 $regular = (new RegularExpression())
-    ->char("_");
+    ->addCapturingGroup($group)
+    ->addCapturingGroup($group)
+    ->addCapturingGroup($group);
 
-echo $regular->replace(" ", $subject)->getResponse();
+echo $regular->replace("$3-$2-$1", $subject);
 ```
 
 #### Output
-```
-this text will be converted
+```json
+["2021-10-13", "1990-12-24", "2000-12-24"]
 ```
 
 ## Split (preg_split)
@@ -137,9 +146,9 @@ use LukasJakobi\Regular\RegularExpression;
 
 $subject = "this_text_will_be_converted";
 $regular = (new RegularExpression())
-    ->char("_");
+    ->addChars("_");
 
-echo $regular->split($subject)->getResponse();
+echo $regular->split($subject);
 ```
 
 #### Output
@@ -157,9 +166,9 @@ use LukasJakobi\Regular\RegularExpression;
 
 $subject = ["i am home", "are you home", "yes i am"];
 $regular = (new RegularExpression())
-    ->charset("home");
+    ->addCustom("home");
 
-echo $regular->grep($subject)->getResponse();
+echo $regular->grep($subject);
 ```
 
 #### Output
