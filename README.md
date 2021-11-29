@@ -166,9 +166,9 @@ use LukasJakobi\Regular\RegularExpression;
 
 $subject = ["i am home", "are you home", "yes i am"];
 $regular = (new RegularExpression())
-    ->charset("home");
+    ->addCustom("home");
 
-echo $regular->grep($subject)->getResponse();
+echo $regular->grep($subject);
 ```
 
 #### Output
