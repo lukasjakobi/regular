@@ -152,7 +152,7 @@ class RegularExpression
      */
     public function addZeroOrMoreTimes(): self
     {
-        $this->pattern .= '.*';
+        $this->pattern .= '*';
 
         return $this;
     }
@@ -165,6 +165,18 @@ class RegularExpression
     public function addOneOrMoreTimes(): self
     {
         $this->pattern .= '+';
+
+        return $this;
+    }
+
+    /**
+     * Add previous expressions one or more times to the pattern
+     *
+     * @return self
+     */
+    public function addZeroOrOneTimes(): self
+    {
+        $this->pattern .= '?';
 
         return $this;
     }
