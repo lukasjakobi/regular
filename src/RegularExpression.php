@@ -443,9 +443,7 @@ class RegularExpression
      */
     public function replace(string|array $replacement, string|array $subject, int $limit = -1): array|string
     {
-        $count = 0;
-
-        return preg_replace($this->toExpression(), $replacement, $subject, $limit, $count);
+        return preg_replace($this->toExpression(), $replacement, $subject, $limit);
     }
 
     /**

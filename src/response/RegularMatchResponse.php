@@ -26,19 +26,17 @@ class RegularMatchResponse
      */
     public function getMatches(): array
     {
-        return isset($this->matches[0]) && is_array($this->matches[0])
-            ? $this->matches[0]
-            : $this->matches;
+        return $this->matches;
     }
 
     /**
+     * helper function
+     *
      * @return bool
      */
     public function hasMatches(): bool
     {
-        return isset($this->matches[0]) && is_array($this->matches[0])
-            ? !empty($this->matches[0])
-            : !empty($this->matches);
+        return empty($this->matches);
     }
 
     /**
@@ -46,9 +44,7 @@ class RegularMatchResponse
      */
     public function getCount(): int
     {
-        return isset($this->matches[0]) && is_array($this->matches[0])
-            ? count($this->matches[0])
-            : count($this->matches);
+        return count($this->matches);
     }
 
     /**
@@ -76,8 +72,6 @@ class RegularMatchResponse
      */
     public function isSuccessful(): bool
     {
-        return isset($this->matches[0]) && is_array($this->matches[0])
-            ? $this->response !== 0
-            : $this->response === 1;
+        return (bool) $this->response;
     }
 }
