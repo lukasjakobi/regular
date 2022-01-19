@@ -233,6 +233,20 @@ class RegularExpression
     }
 
     /**
+     * Add a named group expression to the pattern
+     *
+     * @param string $name the name of the group
+     * @param RegularGroup $group the group to add to the
+     * @return $this
+     */
+    public function addNamedCapturingGroup(string $name, RegularGroup $group): self
+    {
+        $this->pattern .= sprintf('(<%s>%s)', $name, $group->getPattern());
+
+        return $this;
+    }
+
+    /**
      * Add a group expression to the pattern
      *
      * @param RegularGroup $group the group to add to the
@@ -284,6 +298,7 @@ class RegularExpression
 
         return $this;
     }
+
     /**
      * Repeats a pattern exactly $times times
      *
