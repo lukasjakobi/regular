@@ -152,7 +152,7 @@ class RegularExpression
      */
     public function addZeroOrMoreTimes(): self
     {
-        $this->pattern .= '.*';
+        $this->pattern .= '*';
 
         return $this;
     }
@@ -165,6 +165,18 @@ class RegularExpression
     public function addOneOrMoreTimes(): self
     {
         $this->pattern .= '+';
+
+        return $this;
+    }
+
+    /**
+     * Add previous expressions one or more times to the pattern
+     *
+     * @return self
+     */
+    public function addZeroOrOneTimes(): self
+    {
+        $this->pattern .= '?';
 
         return $this;
     }
@@ -221,6 +233,20 @@ class RegularExpression
     }
 
     /**
+     * Add a named group expression to the pattern
+     *
+     * @param string $name the name of the group
+     * @param RegularGroup $group the group to add to the
+     * @return $this
+     */
+    public function addNamedCapturingGroup(string $name, RegularGroup $group): self
+    {
+        $this->pattern .= sprintf('(<%s>%s)', $name, $group->getPattern());
+
+        return $this;
+    }
+
+    /**
      * Add a group expression to the pattern
      *
      * @param RegularGroup $group the group to add to the
@@ -272,6 +298,7 @@ class RegularExpression
 
         return $this;
     }
+
     /**
      * Repeats a pattern exactly $times times
      *
@@ -416,9 +443,7 @@ class RegularExpression
      */
     public function replace(string|array $replacement, string|array $subject, int $limit = -1): array|string
     {
-        $count = 0;
-
-        return preg_replace($this->toExpression(), $replacement, $subject, $limit, $count);
+        return preg_replace($this->toExpression(), $replacement, $subject, $limit);
     }
 
     /**

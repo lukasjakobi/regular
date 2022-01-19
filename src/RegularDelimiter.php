@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace LukasJakobi\Regular;
 
-interface RegularDelimiter
+class RegularDelimiter
 {
     public const SLASH = '/';
     public const TILDE = '~';
